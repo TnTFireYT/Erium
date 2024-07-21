@@ -26,6 +26,7 @@
         .image-container img {
             width: 200px;
             height: 200px;
+            cursor: pointer; /* Cambia il cursore per indicare che l'immagine è cliccabile */
         }
         .score {
             font-size: 2em;
@@ -60,12 +61,13 @@
             <img src="https://via.placeholder.com/200" alt="Immagine">
         </div>
         <div class="score">Punti: 0</div>
-        <button onclick="saveScore()">Salva Punteggio</button>
+        <button id="save-score-button">Salva Punteggio</button>
         <div class="leaderboard">
             <h2>Leaderboard</h2>
             <ul id="leaderboard-list"></ul>
         </div>
     </div>
+
     <!-- Include Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-database.js"></script>
@@ -86,30 +88,21 @@
         const database = firebase.database(app);
 
         let score = 0;
-        let playerName = null;
         const scoreElement = document.querySelector('.score');
         const imageElement = document.querySelector('.image-container img');
+        const saveScoreButton = document.getElementById('save-score-button');
 
-        window.onload = function() {
-            playerName = prompt("Inserisci il tuo nome:");
-            if (!playerName) {
-                playerName = "Anonimo";
-            }
-            fetchLeaderboard();
-        };
-
-        document.addEventListener('keydown', function(event) {
-            if (event.code === 'Space') {
-                score++;
-                scoreElement.textContent = 'Punti: ' + score;
-                imageElement.style.transform = 'scale(1.1)';
-                setTimeout(() => {
-                    imageElement.style.transform = 'scale(1)';
-                }, 100);
-            }
+        imageElement.addEventListener('click', function() {
+            score++;
+            scoreElement.textContent = 'Punti: ' + score;
+            imageElement.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                imageElement.style.transform = 'scale(1)';
+            }, 100);
         });
 
-        async function saveScore() {
+        saveScoreButton.addEventListener('click', async function() {
+            const playerName = prompt("Inserisci il tuo nome:");
             if (!playerName) {
                 alert("Nome utente non valido.");
                 return;
@@ -123,7 +116,7 @@
 
             alert("Punteggio salvato!");
             fetchLeaderboard();
-        }
+        });
 
         async function fetchLeaderboard() {
             const scoresRef = firebase.database().ref('scores');
@@ -145,6 +138,9 @@
                 console.error("Nessun dato disponibile.");
             }
         }
+
+        // Carica la leaderboard all'avvio
+        fetchLeaderboard();
     </script>
 </body>
 </html>
