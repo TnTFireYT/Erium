@@ -26,7 +26,6 @@
         .image-container img {
             width: 200px;
             height: 200px;
-            cursor: pointer; /* Cambia il cursore per indicare che l'immagine è cliccabile */
         }
         .score {
             font-size: 2em;
@@ -61,86 +60,78 @@
             <img src="https://via.placeholder.com/200" alt="Immagine">
         </div>
         <div class="score">Punti: 0</div>
-        <button id="save-score-button">Salva Punteggio</button>
+        <button onclick="saveScore()">Salva Punteggio</button>
         <div class="leaderboard">
             <h2>Leaderboard</h2>
             <ul id="leaderboard-list"></ul>
         </div>
     </div>
-
-    <!-- Include Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.14.0/firebase-database.js"></script>
     <script>
-        // Configura Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyAlYgwMWsBFck0gkJRnhfMn28VMsuCVuGY",
-            authDomain: "leaderbord-943b4.firebaseapp.com",
-            projectId: "leaderbord-943b4",
-            storageBucket: "leaderbord-943b4.appspot.com",
-            messagingSenderId: "162055795158",
-            appId: "1:162055795158:web:45d1522d205a3a77903477",
-            measurementId: "G-BXEJQPB4HV"
-        };
-
-        // Inizializza Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database(app);
-
         let score = 0;
+        let playerName = null;
         const scoreElement = document.querySelector('.score');
         const imageElement = document.querySelector('.image-container img');
-        const saveScoreButton = document.getElementById('save-score-button');
 
-        imageElement.addEventListener('click', function() {
-            score++;
-            scoreElement.textContent = 'Punti: ' + score;
-            imageElement.style.transform = 'scale(1.1)';
-            setTimeout(() => {
-                imageElement.style.transform = 'scale(1)';
-            }, 100);
+        const sheetId = 'YOUR_SHEET_ID'; // Sostituisci con il tuo Sheet ID
+        const apiKey = 'YOUR_API_KEY'; // Sostituisci con la tua API Key
+
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space') {
+                score++;
+                scoreElement.textContent = 'Punti: ' + score;
+                imageElement.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    imageElement.style.transform = 'scale(1)';
+                }, 100);
+            }
         });
 
-        saveScoreButton.addEventListener('click', async function() {
-            const playerName = prompt("Inserisci il tuo nome:");
+        async function saveScore() {
             if (!playerName) {
                 alert("Nome utente non valido.");
                 return;
             }
 
-            const scoresRef = firebase.database().ref('scores');
-            await scoresRef.push({
-                name: playerName,
-                score: score
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Leaderboard:append?valueInputOption=RAW&key=${apiKey}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    values: [[playerName, score]]
+                })
             });
 
-            alert("Punteggio salvato!");
-            fetchLeaderboard();
-        });
-
-        async function fetchLeaderboard() {
-            const scoresRef = firebase.database().ref('scores');
-            const snapshot = await scoresRef.once('value');
-
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                const leaderboardList = document.getElementById('leaderboard-list');
-                leaderboardList.innerHTML = "";
-
-                const leaderboard = Object.values(data).sort((a, b) => b.score - a.score);
-
-                leaderboard.forEach(row => {
-                    const listItem = document.createElement('li');
-                    listItem.textContent = `${row.name}: ${row.score} punti`;
-                    leaderboardList.appendChild(listItem);
-                });
+            if (response.ok) {
+                alert("Punteggio salvato!");
+                fetchLeaderboard();
             } else {
-                console.error("Nessun dato disponibile.");
+                console.error("Errore nel salvataggio del punteggio:", response.statusText);
             }
         }
 
-        // Carica la leaderboard all'avvio
-        fetchLeaderboard();
+        async function fetchLeaderboard() {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Leaderboard?key=${apiKey}`;
+            const response = await fetch(url);
+
+            if (response.ok) {
+                const data = await response.json();
+                const leaderboardList = document.getElementById('leaderboard-list');
+                leaderboardList.innerHTML = "";
+
+                const rows = data.values.slice(1); // Salta l'intestazione
+                rows.sort((a, b) => b[1] - a[1]); // Ordina per punteggio decrescente
+
+                rows.forEach(row => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${row[0]}: ${row[1]} punti`;
+                    leaderboardList.appendChild(listItem);
+                });
+            } else {
+                console.error("Errore nel recupero della leaderboard:", response.statusText);
+            }
+        }
     </script>
 </body>
 </html>
