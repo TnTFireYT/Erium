@@ -26,7 +26,7 @@
         .image-container img {
             width: 200px;
             height: 200px;
-            cursor: pointer;
+            cursor: pointer; /* Cambia il cursore per indicare che l'immagine è cliccabile */
         }
         .score {
             font-size: 2em;
@@ -84,15 +84,14 @@
         };
 
         // Inizializza Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database(app);
 
         let score = 0;
         const scoreElement = document.querySelector('.score');
         const imageElement = document.querySelector('.image-container img');
         const saveScoreButton = document.getElementById('save-score-button');
 
-        // Funzione per gestire il click sull'immagine
         imageElement.addEventListener('click', function() {
             score++;
             scoreElement.textContent = 'Punti: ' + score;
@@ -102,7 +101,6 @@
             }, 100);
         });
 
-        // Funzione per salvare il punteggio
         saveScoreButton.addEventListener('click', async function() {
             const playerName = prompt("Inserisci il tuo nome:");
             if (!playerName) {
@@ -110,44 +108,34 @@
                 return;
             }
 
-            try {
-                console.log("Salvataggio del punteggio...");
-                const scoresRef = database.ref('scores');
-                await scoresRef.push({
-                    name: playerName,
-                    score: score
-                });
+            const scoresRef = firebase.database().ref('scores');
+            await scoresRef.push({
+                name: playerName,
+                score: score
+            });
 
-                alert("Punteggio salvato!");
-                fetchLeaderboard();
-            } catch (error) {
-                console.error("Errore nel salvataggio del punteggio:", error);
-            }
+            alert("Punteggio salvato!");
+            fetchLeaderboard();
         });
 
-        // Funzione per recuperare la leaderboard
         async function fetchLeaderboard() {
-            try {
-                console.log("Recupero della leaderboard...");
-                const scoresRef = database.ref('scores');
-                const snapshot = await scoresRef.once('value');
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    const leaderboardList = document.getElementById('leaderboard-list');
-                    leaderboardList.innerHTML = "";
+            const scoresRef = firebase.database().ref('scores');
+            const snapshot = await scoresRef.once('value');
 
-                    const leaderboard = Object.values(data).sort((a, b) => b.score - a.score);
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                const leaderboardList = document.getElementById('leaderboard-list');
+                leaderboardList.innerHTML = "";
 
-                    leaderboard.forEach(row => {
-                        const listItem = document.createElement('li');
-                        listItem.textContent = `${row.name}: ${row.score} punti`;
-                        leaderboardList.appendChild(listItem);
-                    });
-                } else {
-                    console.error("Nessun dato disponibile.");
-                }
-            } catch (error) {
-                console.error("Errore nel recupero della leaderboard:", error);
+                const leaderboard = Object.values(data).sort((a, b) => b.score - a.score);
+
+                leaderboard.forEach(row => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${row.name}: ${row.score} punti`;
+                    leaderboardList.appendChild(listItem);
+                });
+            } else {
+                console.error("Nessun dato disponibile.");
             }
         }
 
