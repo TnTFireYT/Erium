@@ -23,12 +23,11 @@
             align-items: center;
             flex-direction: column;
         }
-        }
         .image-container img {
             width: 200px;
             height: 200px;
+            cursor: pointer; /* Cambia il cursore per indicare che l'immagine è cliccabile */
         }
-        
         .score {
             font-size: 2em;
             color: #333;
@@ -59,7 +58,7 @@
 <body>
     <div class="container">
         <div class="image-container">
-            <img src="https://freepngimg.com/thumb/cookie/3-2-cookie-download-png.png" alt="Immagine">
+            <img src="https://freepngimg.com/thumb/cookie/3-2-cookie-download-png.png" alt="Immagine" id="cookie-img">
         </div>
         <div class="score">Punti: 0</div>
         <button onclick="saveScore()">Salva Punteggio</button>
@@ -72,11 +71,31 @@
         let score = 0;
         let playerName = null;
         const scoreElement = document.querySelector('.score');
-        const imageElement = document.querySelector('.image-container img');
+        const imageElement = document.getElementById('cookie-img');
 
         const sheetId = 'YOUR_SHEET_ID'; // Sostituisci con il tuo Sheet ID
         const apiKey = 'YOUR_API_KEY'; // Sostituisci con la tua API Key
 
+        // Chiedi il nome all'utente al caricamento della pagina
+        window.onload = function() {
+            playerName = prompt("Inserisci il tuo nome:");
+            if (!playerName) {
+                playerName = "Anonimo";
+            }
+            fetchLeaderboard();
+        };
+
+        // Incrementa il punteggio al clic sull'immagine
+        imageElement.addEventListener('click', function() {
+            score++;
+            scoreElement.textContent = 'Punti: ' + score;
+            imageElement.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                imageElement.style.transform = 'scale(1)';
+            }, 100);
+        });
+
+        // Incrementa il punteggio premendo la barra spaziatrice
         document.addEventListener('keydown', function(event) {
             if (event.code === 'Space') {
                 score++;
@@ -90,8 +109,11 @@
 
         async function saveScore() {
             if (!playerName) {
-                alert("Nome utente non valido.");
-                return;
+                playerName = prompt("Inserisci il tuo nome per salvare il punteggio:");
+                if (!playerName) {
+                    alert("Nome utente non valido.");
+                    return;
+                }
             }
 
             const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Leaderboard:append?valueInputOption=RAW&key=${apiKey}`;
