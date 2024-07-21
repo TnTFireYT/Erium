@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Economia del Server</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        table {
+            width: 80%;
+            border-collapse: collapse;
+            margin: auto; /* Centra la tabella */
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .position-change {
+            width: 100px; /* Larghezza fissa per la colonna del cambio di posizione */
+            text-align: center;
+        }
+        .up {
+            color: green;
+        }
+        .down {
+            color: red;
+        }
+        .same {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <h1>Economia del Server</h1>
+    <label for="weekSelector">Seleziona Settimana:</label>
+    <select id="weekSelector" onchange="updateTable()">
+        <!-- Opzioni settimanali -->
+    </select>
+    <table id="data-table">
+        <thead>
+            <tr>
+                <th>Utente</th>
+                <th>Erium</th>
+                <th class="position-change">Posizione Cambiata</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Righe dati -->
+        </tbody>
+    </table>
+    <div style="text-align:center; margin-top: 20px;">
+        <h2>Classifica</h2>
+        <p>Chi sarà il più ricco?</p>
+    </div>
+    <script>
+        const data = {
+            "2024-07-21": [
+                { "Utente": "Jirachi", "Erium": 750 },
+                { "Utente": "Dubbiamente", "Erium": 500 },
+                { "Utente": "Barp", "Erium": 500 },
+                { "Utente": "SuS", "Erium": 250 }
+            ],
+            "2024-07-28": [
+                { "Utente": "Jirachi", "Erium": 800 },
+                { "Utente": "Dubbiamente", "Erium": 520 },
+                { "Utente": "Barp", "Erium": 480 },
+                { "Utente": "SuS", "Erium": 300 }
+            ]
+            // Aggiungi più settimane qui
+        };
+
+        window.onload = function() {
+            const weekSelector = document.getElementById("weekSelector");
+            const weeks = Object.keys(data);
+            weeks.forEach(week => {
+                const option = document.createElement("option");
+                option.value = week;
+                option.textContent = week;
+                weekSelector.appendChild(option);
+            });
+            updateTable();
+        }
+
+        function updateTable() {
+            const weekSelector = document.getElementById("weekSelector");
+            const selectedWeek = weekSelector.value;
+            const tableBody = document.getElementById("data-table").querySelector("tbody");
+            tableBody.innerHTML = "";
+
+            if (data[selectedWeek]) {
+                // Ordina i dati in base al valore di Erium in ordine decrescente
+                const sortedData = data[selectedWeek].sort((a, b) => b.Erium - a.Erium);
+                
+                // Crea una mappa per la posizione degli utenti nella settimana selezionata
+                const currentPosition = {};
+                sortedData.forEach((entry, index) => {
+                    currentPosition[entry.Utente] = index + 1;
+                });
+
+                let comparePosition = {};
+                // Trova la settimana precedente
+                const previousWeek = Object.keys(data).find(week => {
+                    return new Date(week) < new Date(selectedWeek);
+                });
+
+                if (previousWeek && data[previousWeek]) {
+                    const sortedCompareData = data[previousWeek].sort((a, b) => b.Erium - a.Erium);
+                    comparePosition = {};
+                    sortedCompareData.forEach((entry, index) => {
+                        comparePosition[entry.Utente] = index + 1;
+                    });
+                }
+
+                // Popola la tabella con i dati ordinati
+                sortedData.forEach(entry => {
+                    const row = document.createElement("tr");
+                    const nameCell = document.createElement("td");
+                    nameCell.textContent = entry.Utente;
+                    const moneyCell = document.createElement("td");
+                    moneyCell.textContent = entry.Erium;
+                    const positionCell = document.createElement("td");
+                    positionCell.className = 'position-change';
+                    
+                    if (comparePosition[entry.Utente] !== undefined) {
+                        const positionChange = comparePosition[entry.Utente] - currentPosition[entry.Utente];
+                        positionCell.textContent = positionChange > 0 ? `+${positionChange}` : positionChange;
+                        positionCell.className = positionChange > 0 ? 'up' : positionChange < 0 ? 'down' : 'same';
+                    } else {
+                        positionCell.textContent = "N/A";
+                        positionCell.className = 'same';
+                    }
+
+                    row.appendChild(nameCell);
+                    row.appendChild(moneyCell);
+                    row.appendChild(positionCell);
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
