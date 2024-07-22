@@ -29,7 +29,7 @@
             background-color: #f2f2f2;
         }
         .position-change {
-            width: 100px; /* Larghezza fissa per la colonna del cambio di posizione */
+            width: 100px; 
             text-align: center;
         }
         .up {
@@ -73,7 +73,13 @@
                 { "Utente": "Barp", "Erium": 500 },
                 { "Utente": "SuS", "Erium": 250 }
             ],
-            // Aggiungi più settimane qui
+            "2024-07-28": [
+                { "Utente": "Jirachi", "Erium": 750 },
+                { "Utente": "Dubbiamente", "Erium": 500 },
+                { "Utente": "Barp", "Erium": 500 },
+                { "Utente": "SuS", "Erium": 250 }
+            ],
+            
         };
 
         window.onload = function() {
@@ -97,15 +103,13 @@
             if (data[selectedWeek]) {
                 // Ordina i dati in base al valore di Erium in ordine decrescente
                 const sortedData = data[selectedWeek].sort((a, b) => b.Erium - a.Erium);
-                
-                // Crea una mappa per la posizione degli utenti nella settimana selezionata
+            
                 const currentPosition = {};
                 sortedData.forEach((entry, index) => {
                     currentPosition[entry.Utente] = index + 1;
                 });
 
                 let comparePosition = {};
-                // Trova la settimana precedente
                 const previousWeek = Object.keys(data).find(week => {
                     return new Date(week) < new Date(selectedWeek);
                 });
@@ -118,7 +122,6 @@
                     });
                 }
 
-                // Popola la tabella con i dati ordinati
                 sortedData.forEach(entry => {
                     const row = document.createElement("tr");
                     const nameCell = document.createElement("td");
